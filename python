@@ -1,0 +1,50 @@
+import serial
+import matplotlib.pyplot as plt
+import numpy as np
+import time
+
+# تنظیمات پورت سریال
+ser = serial.Serial('COM8', 9600, timeout=1)  # بررسی کن که COM8 درست باشه
+
+# لیست ذخیره مختصات نقاط
+x_data = []
+y_data = []
+
+print("⏳ در حال اسکن... لطفاً ۳ ثانیه صبر کنید.")
+
+start_time = time.time()  # شروع تایمر
+
+while time.time() - start_time < 3:  # اجرای حلقه تا ۳ ثانیه
+    try:
+        data = ser.readline().decode('utf-8').strip()
+        if data:
+            parts = data.split(',')
+            if len(parts) == 2:
+                angle = float(parts[0])
+                distance = float(parts[1])
+                
+                # تبدیل به مختصات کارتزین (x, y)
+                angle_rad = np.radians(angle)  # تبدیل درجه به رادیان
+                x = distance * np.cos(angle_rad)
+                y = distance * np.sin(angle_rad)
+
+                # ذخیره مختصات
+                x_data.append(x)
+                y_data.append(y)
+
+    except KeyboardInterrupt:
+        print("❌ اسکن متوقف شد.")
+        break
+
+ser.close()
+
+# نمایش شکل نهایی بعد از اتمام اسکن
+print("✅ اسکن کامل شد! در حال نمایش شکل...")
+plt.figure(figsize=(6, 6))
+plt.plot(x_data, y_data, 'bo-', markersize=4)  # رسم نقاط جسم
+plt.xlabel("X (cm)")
+plt.ylabel("Y (cm)")
+plt.title("شکل جسم اسکن شده")
+plt.axis("equal")  # مقیاس یکسان برای X و Y
+plt.grid(True)
+plt.show()
